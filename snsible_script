@@ -1,0 +1,79 @@
+
+---
+- name: Download and extract file from website
+  hosts: targets # Change this to the target host if necessary
+  gather_facts: yes  # We don't need facts for this task
+  
+  vars:
+    ansible_become_pass: "H0rnSt@r"  # Set the sudo password
+
+  tasks:
+    - name: Install PostgreSQL, PostgreSQL-contrib, and Golang
+      command: sudo apt install -y git
+      become: yes
+      
+    - name: Change directory to /home/hornet/loggator and run 'git clone https://github.com/souvikhaldar/loggator'
+      command: sudo git clone https://github.com/souvikhaldar/loggator
+      args:
+        chdir: /home/hornet/ 
+      become: yes
+      
+    - name: Ensure /usr/local/bin directory exists
+      file:
+        path: /usr/local/bin
+        state: directory
+      become: yes
+
+    - name: Download the tar.gz file from the website
+      get_url:
+        url: "https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz"
+        dest: /usr/local/bin/migrate.linux-amd64.tar.gz
+      become: yes
+
+    - name: Extract the tar.gz file
+      command: tar -xvzf /usr/local/bin/migrate.linux-amd64.tar.gz -C /usr/local/bin
+      become: yes
+
+    - name: Remove the downloaded tar.gz file
+      file:
+        path: /usr/local/bin/migrate.linux-amd64.tar.gz 
+        state: absent
+      become: yes
+
+    - name: Install PostgreSQL, PostgreSQL-contrib, and Golang
+      command: sudo apt install -y postgresql postgresql-contrib golang
+      become: yes
+
+    - name: Run 'CREATE DATABASE loggator' with psql
+      command: sudo -u postgres psql -c "CREATE DATABASE loggator;"
+      become: yes
+
+    - name: Set the owner of 'loggator' database to 'postgres' with psql
+      command: sudo -u postgres psql -c "ALTER DATABASE loggator OWNER TO postgres;"
+      become: yes
+
+    - name: Set the password for the 'postgres' user with psql
+      command: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '8900';"
+      become: yes
+
+    - name: Grant all privileges to the 'postgres' user on 'loggator' database with psql
+      command: sudo -u postgres psql -d loggator -c "GRANT ALL PRIVILEGES ON DATABASE loggator TO postgres;"
+      become: yes
+    
+    - name: Change directory to /home/hornet/
+      command: chmod 777 loggator
+      args:
+        chdir: /home/hornet/
+      become: yes
+    
+    - name: Change directory to /home/hornet/loggator
+      command: make localmigrateup
+      args:
+        chdir: /home/hornet/loggator
+      become: yes
+    
+    - name: Change directory to /home/hornet/loggator/cmd/server and run 'go run main.go'
+      command: go run main.go
+      args:
+        chdir: /home/hornet/loggator/cmd/server
+      become: yes
