@@ -5,7 +5,7 @@
   gather_facts: yes  # We don't need facts for this task
   
   vars:
-    ansible_become_pass: "H0rnSt@r"  # Set the sudo password
+    ansible_become_pass: "<Your_sudo_password>"  # Set the sudo password
 
   tasks:
     - name: Install PostgreSQL, PostgreSQL-contrib, and Golang
