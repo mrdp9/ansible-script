@@ -8,7 +8,7 @@
     ansible_become_pass: "<Your_sudo_password>"  # Set the sudo password
 
   tasks:
-    - name: Install PostgreSQL, PostgreSQL-contrib, and Golang
+    - name: Install Git
       command: sudo apt install -y git
       become: yes
       
